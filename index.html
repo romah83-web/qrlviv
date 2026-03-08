@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR-Lviv | Цифровий хаб</title>
+    <style>
+        :root { --gold: #d4af37; --dark: #1a1a1a; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f0f0; }
+        header { background: var(--dark); color: white; text-align: center; padding: 15px; border-bottom: 3px solid var(--gold); }
+        .filters { padding: 15px; background: white; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        select { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid var(--gold); margin-bottom: 15px; font-size: 16px; outline: none; }
+        .cats { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; }
+        .btn { border: 1px solid var(--gold); background: white; padding: 10px 20px; border-radius: 20px; cursor: pointer; white-space: nowrap; font-weight: bold; }
+        .btn.active { background: var(--gold); color: white; }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(115px, 1fr)); gap: 12px; padding: 15px; }
+        .card { background: white; border-radius: 12px; padding: 10px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; transition: 0.3s; }
+        .card:active { transform: scale(0.98); }
+        .card h3 { font-size: 11px; margin: 0 0 8px 0; height: 30px; overflow: hidden; font-weight: bold; color: var(--dark); }
+        .qr-box { border: 1px solid #eee; border-radius: 8px; padding: 5px; margin-bottom: 8px; display: block; background: #fff; }
+        .qr-box img { width: 100%; display: block; border-radius: 4px; }
+        .desc { font-size: 9px; color: #666; height: 32px; overflow: hidden; margin-bottom: 10px; line-height: 1.2; }
+        .loc { background: #4285F4; color: white; text-decoration: none; padding: 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<header><strong>QR-LVIV</strong></header>
+
+<div class="filters">
+    <select id="districtSelect" onchange="applyFilters()">
+        <option value="all">Усі локації</option>
+    </select>
+    
+    <div class="cats">
+        <button class="btn active" data-cat="all" onclick="setCategory('all')">Усі</button>
+        <button class="btn" data-cat="Їжа" onclick="setCategory('Їжа')">Їжа</button>
+        <button class="btn" data-cat="Шопінг" onclick="setCategory('Шопінг')">Шопінг</button>
+        <button class="btn" data-cat="Послуги" onclick="setCategory('Послуги')">Послуги</button>
+    </div>
+</div>
+
+<div id="container" class="grid"></div>
+
+<script>
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbwMZaoa6NCvzoBpM3qx55qL_9eCjZ0XdrC4CRYsZs-Yxq_hyTFh0A_BsV38JUJdCgo-eA/exec";
+    let allData = [];
+    let currentCategory = 'all';
+
+    async function load() {
+        try {
+            const response = await fetch(scriptUrl);
+            allData = await response.json();
+            
+            fillDistricts(); // Заповнюємо випадаючий список районів
+            render(allData); // Малюємо всі картки
+        } catch (e) { console.error("Помилка завантаження:", e); }
+    }
+
+    // Автоматично витягуємо унікальні назви районів з вашої таблиці
+    function fillDistricts() {
+        const select = document.getElementById('districtSelect');
+        const districts = [...new Set(allData.map(item => item["Район"]))].filter(d => d);
+        
+        districts.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d;
+            opt.textContent = d;
+            select.appendChild(opt);
+        });
+    }
+
+    function setCategory(cat) {
+        currentCategory = cat;
+        document.querySelectorAll('.btn').forEach(b => {
+            b.classList.toggle('active', b.getAttribute('data-cat') === cat);
+        });
+        applyFilters();
+    }
+
+    function applyFilters() {
+        const selectedDistrict = document.getElementById('districtSelect').value;
+        
+        const filtered = allData.filter(item => {
+            const matchDistrict = (selectedDistrict === 'all' || item["Район"] === selectedDistrict);
+            const matchCategory = (currentCategory === 'all' || (item["Категорія"] && item["Категорія"].toLowerCase().includes(currentCategory.toLowerCase())));
+            return matchDistrict && matchCategory && item["Назва"];
+        });
+        
+        render(filtered);
+    }
+
+    function render(data) {
+        const container = document.getElementById('container');
+        container.innerHTML = '';
+        
+        data.forEach(item => {
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(item["Посилання"])}`;
+            container.innerHTML += `
+                <div class="card">
+                    <h3>${item["Назва"]}</h3>
+                    <a href="${item["Посилання"]}" target="_blank" class="qr-box">
+                        <img src="${qrUrl}" alt="QR">
+                    </a>
+                    <p class="desc">${item["Опис"] || ''}</p>
+                    <a href="${item["Карта"]}" target="_blank" class="loc">📍 Локація</a>
+                </div>`;
+        });
+    }
+
+    load();
+</script>
+</body>
+</html>
