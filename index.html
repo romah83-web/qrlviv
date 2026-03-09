@@ -6,7 +6,7 @@
     <title>QR-Lviv | Цифровий хаб</title>
     <style>
         :root { --gold: #d4af37; --dark: #1a1a1a; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f0f0; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f0f0; display: flex; flex-direction: column; min-height: 100vh; }
         header { background: var(--dark); color: white; text-align: center; padding: 15px; border-bottom: 3px solid var(--gold); }
         .filters { padding: 15px; background: white; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         select { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid var(--gold); margin-bottom: 15px; font-size: 16px; outline: none; }
@@ -14,14 +14,35 @@
         .btn { border: 1px solid var(--gold); background: white; padding: 10px 20px; border-radius: 20px; cursor: pointer; white-space: nowrap; font-weight: bold; }
         .btn.active { background: var(--gold); color: white; }
         
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(115px, 1fr)); gap: 12px; padding: 15px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(115px, 1fr)); gap: 12px; padding: 15px; flex-grow: 1; }
         .card { background: white; border-radius: 12px; padding: 10px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; transition: 0.3s; }
         .card:active { transform: scale(0.98); }
         .card h3 { font-size: 11px; margin: 0 0 8px 0; height: 30px; overflow: hidden; font-weight: bold; color: var(--dark); }
-        .qr-box { border: 1px solid #eee; border-radius: 8px; padding: 5px; margin-bottom: 8px; display: block; background: #fff; }
+        .qr-box { border: 1px solid #eee; border-radius: 8px; padding: 5px; margin-bottom: 8px; display: block; background: #fff; text-decoration: none; }
         .qr-box img { width: 100%; display: block; border-radius: 4px; }
         .desc { font-size: 9px; color: #666; height: 32px; overflow: hidden; margin-bottom: 10px; line-height: 1.2; }
         .loc { background: #4285F4; color: white; text-decoration: none; padding: 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
+
+        /* Стилі для меню контактів */
+        .footer { background: var(--dark); padding: 20px 15px; text-align: center; border-top: 2px solid var(--gold); margin-top: auto; }
+        .contact-menu { display: none; background: white; border-radius: 15px; padding: 10px; margin-bottom: 15px; box-shadow: 0 -5px 20px rgba(0,0,0,0.2); }
+        .contact-link { display: block; padding: 10px; margin: 5px 0; text-decoration: none; font-weight: bold; border-radius: 10px; color: white; }
+        .tg { background: #0088cc; }
+        .vb { background: #7360f2; }
+        .wa { background: #25d366; }
+        
+        .partner-btn { 
+            display: inline-block; 
+            background: var(--gold); 
+            color: white; 
+            border: none;
+            padding: 14px 28px; 
+            border-radius: 30px; 
+            font-weight: bold; 
+            font-size: 16px; 
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -43,30 +64,40 @@
 
 <div id="container" class="grid"></div>
 
+<div class="footer">
+    <div id="m-menu" class="contact-menu">
+        <a href="https://t.me/+380678622724" class="contact-link tg">Telegram</a>
+        <a href="viber://chat?number=%2B380678622724" class="contact-link vb">Viber</a>
+        <a href="https://wa.me/380678622724" class="contact-link wa">WhatsApp</a>
+    </div>
+    <button onclick="toggleMenu()" class="partner-btn">🤝 Стати партнером</button>
+</div>
+
 <script>
     const scriptUrl = "https://script.google.com/macros/s/AKfycbwMZaoa6NCvzoBpM3qx55qL_9eCjZ0XdrC4CRYsZs-Yxq_hyTFh0A_BsV38JUJdCgo-eA/exec";
     let allData = [];
     let currentCategory = 'all';
 
+    function toggleMenu() {
+        const m = document.getElementById('m-menu');
+        m.style.display = (m.style.display === 'block') ? 'none' : 'block';
+    }
+
     async function load() {
         try {
             const response = await fetch(scriptUrl);
             allData = await response.json();
-            
-            fillDistricts(); // Заповнюємо випадаючий список районів
-            render(allData); // Малюємо всі картки
-        } catch (e) { console.error("Помилка завантаження:", e); }
+            fillDistricts();
+            applyFilters(); 
+        } catch (e) { console.error("Помилка:", e); }
     }
 
-    // Автоматично витягуємо унікальні назви районів з вашої таблиці
     function fillDistricts() {
         const select = document.getElementById('districtSelect');
         const districts = [...new Set(allData.map(item => item["Район"]))].filter(d => d);
-        
         districts.forEach(d => {
             const opt = document.createElement('option');
-            opt.value = d;
-            opt.textContent = d;
+            opt.value = d; opt.textContent = d;
             select.appendChild(opt);
         });
     }
@@ -81,23 +112,20 @@
 
     function applyFilters() {
         const selectedDistrict = document.getElementById('districtSelect').value;
-        
         const filtered = allData.filter(item => {
             const matchDistrict = (selectedDistrict === 'all' || item["Район"] === selectedDistrict);
             const matchCategory = (currentCategory === 'all' || (item["Категорія"] && item["Категорія"].toLowerCase().includes(currentCategory.toLowerCase())));
-            return matchDistrict && matchCategory && item["Назва"];
+            return matchDistrict && matchCategory && item["Назва"] && item["Посилання"];
         });
-        
         render(filtered);
     }
 
     function render(data) {
         const container = document.getElementById('container');
-        container.innerHTML = '';
-        
+        let html = '';
         data.forEach(item => {
             const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(item["Посилання"])}`;
-            container.innerHTML += `
+            html += `
                 <div class="card">
                     <h3>${item["Назва"]}</h3>
                     <a href="${item["Посилання"]}" target="_blank" class="qr-box">
@@ -107,6 +135,7 @@
                     <a href="${item["Карта"]}" target="_blank" class="loc">📍 Локація</a>
                 </div>`;
         });
+        container.innerHTML = html;
     }
 
     load();
