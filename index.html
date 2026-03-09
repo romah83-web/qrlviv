@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QR-Lviv | Цифровий хаб</title>
     <style>
-        :root { --gold: #d4af37; --dark: #1a1a1a; }
+        :root { --gold: #d4af37; --dark: #1a1a1a; --food: #2ecc71; --shop: #3498db; --service: #e67e22; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f0f0; padding-bottom: 80px; }
         header { background: var(--dark); color: white; text-align: center; padding: 15px; border-bottom: 3px solid var(--gold); }
         .filters { padding: 15px; background: white; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
@@ -15,7 +15,11 @@
         .btn.active { background: var(--gold); color: white; }
         
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(115px, 1fr)); gap: 12px; padding: 15px; }
-        .card { background: white; border-radius: 12px; padding: 10px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+        .card { background: white; border-radius: 12px; padding: 10px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; border-top: 4px solid #ccc; }
+        .card.cat-food { border-top-color: var(--food); }
+        .card.cat-shop { border-top-color: var(--shop); }
+        .card.cat-service { border-top-color: var(--service); }
+        
         .card h3 { font-size: 11px; margin: 0 0 8px 0; height: 30px; overflow: hidden; font-weight: bold; color: var(--dark); }
         .qr-box { border: 1px solid #eee; border-radius: 8px; padding: 5px; margin-bottom: 8px; display: block; background: #fff; text-decoration: none; }
         .qr-box img { width: 100%; display: block; border-radius: 4px; }
@@ -27,11 +31,7 @@
         .contact-link { display: block; padding: 12px 20px; margin: 5px 0; text-decoration: none; font-weight: bold; border-radius: 10px; color: white; text-align: center; font-size: 14px; }
         .tg { background: #0088cc; } .vb { background: #7360f2; } .wa { background: #25d366; }
         
-        .partner-btn { 
-            background: var(--gold); color: white; border: none; padding: 15px 20px; border-radius: 50px; 
-            font-weight: bold; font-size: 14px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            display: flex; align-items: center; gap: 8px;
-        }
+        .partner-btn { background: var(--gold); color: white; border: none; padding: 15px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 8px; }
     </style>
 </head>
 <body>
@@ -54,9 +54,9 @@
 
 <div class="fixed-footer">
     <div id="m-menu" class="contact-menu">
-        <a href="https://t.me/+380678622724" target="_blank" rel="noopener" class="contact-link tg">Telegram</a>
+        <a href="https://t.me/+380678622724" target="_blank" rel="noopener noreferrer" class="contact-link tg">Telegram</a>
         <a href="viber://chat?number=%2B380678622724" class="contact-link vb">Viber</a>
-        <a href="https://wa.me/380678622724" target="_blank" rel="noopener" class="contact-link wa">WhatsApp</a>
+        <a href="https://wa.me/380678622724" target="_blank" rel="noopener noreferrer" class="contact-link wa">WhatsApp</a>
     </div>
     <button onclick="toggleMenu()" class="partner-btn">🤝 <span>Партнерство</span></button>
 </div>
@@ -113,19 +113,23 @@
         let html = '';
         data.forEach(item => {
             const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(item["Посилання"])}`;
+            let catClass = '';
+            if (item["Категорія"] === 'Їжа') catClass = 'cat-food';
+            else if (item["Категорія"] === 'Шопінг') catClass = 'cat-shop';
+            else if (item["Категорія"] === 'Послуги') catClass = 'cat-service';
+
             html += `
-                <div class="card">
+                <div class="card ${catClass}">
                     <h3>${item["Назва"]}</h3>
-                    <a href="${item["Посилання"]}" target="_blank" rel="noopener" class="qr-box">
+                    <a href="${item["Посилання"]}" target="_blank" rel="noopener noreferrer" class="qr-box">
                         <img src="${qrUrl}" alt="QR">
                     </a>
                     <p class="desc">${item["Опис"] || ''}</p>
-                    <a href="${item["Карта"]}" target="_blank" rel="noopener" class="loc">📍 Локація</a>
+                    <a href="${item["Карта"]}" target="_blank" rel="noopener noreferrer" class="loc">📍 Локація</a>
                 </div>`;
         });
         container.innerHTML = html;
     }
-
     load();
 </script>
 </body>
