@@ -6,7 +6,7 @@
     <title>QR-Lviv | Цифровий хаб</title>
     <style>
         :root { --gold: #d4af37; --dark: #1a1a1a; --food: #2ecc71; --shop: #3498db; --service: #e67e22; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f0f0; padding-bottom: 80px; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f0f0; padding-bottom: 90px; }
         header { background: var(--dark); color: white; text-align: center; padding: 15px; border-bottom: 3px solid var(--gold); }
         .filters { padding: 15px; background: white; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         select { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid var(--gold); margin-bottom: 15px; font-size: 16px; outline: none; }
@@ -15,23 +15,25 @@
         .btn.active { background: var(--gold); color: white; }
         
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(115px, 1fr)); gap: 12px; padding: 15px; }
-        .card { background: white; border-radius: 12px; padding: 10px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; border-top: 4px solid #ccc; }
-        .card.cat-food { border-top-color: var(--food); }
-        .card.cat-shop { border-top-color: var(--shop); }
-        .card.cat-service { border-top-color: var(--service); }
+        .card { background: white; border-radius: 12px; overflow: hidden; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
         
-        .card h3 { font-size: 11px; margin: 0 0 8px 0; height: 30px; overflow: hidden; font-weight: bold; color: var(--dark); }
-        .qr-box { border: 1px solid #eee; border-radius: 8px; padding: 5px; margin-bottom: 8px; display: block; background: #fff; text-decoration: none; }
+        /* Кольорові заголовки */
+        .card h3 { font-size: 11px; margin: 0; padding: 10px 5px; height: 35px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; background: #999; }
+        .card.cat-food h3 { background: var(--food); }
+        .card.cat-shop h3 { background: var(--shop); }
+        .card.cat-service h3 { background: var(--service); }
+        
+        .card-content { padding: 10px; display: flex; flex-direction: column; flex-grow: 1; }
+        .qr-box { border: 1px solid #eee; border-radius: 8px; padding: 5px; margin-bottom: 8px; display: block; background: #fff; cursor: pointer; }
         .qr-box img { width: 100%; display: block; border-radius: 4px; }
         .desc { font-size: 9px; color: #666; height: 32px; overflow: hidden; margin-bottom: 10px; line-height: 1.2; }
-        .loc { background: #4285F4; color: white; text-decoration: none; padding: 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
+        .loc { background: #4285F4; color: white; text-decoration: none; padding: 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
 
         .fixed-footer { position: fixed; bottom: 20px; right: 20px; z-index: 100; text-align: right; }
         .contact-menu { display: none; background: white; border-radius: 15px; padding: 10px; margin-bottom: 10px; box-shadow: 0 5px 25px rgba(0,0,0,0.3); border: 2px solid var(--gold); }
         .contact-link { display: block; padding: 12px 20px; margin: 5px 0; text-decoration: none; font-weight: bold; border-radius: 10px; color: white; text-align: center; font-size: 14px; }
         .tg { background: #0088cc; } .vb { background: #7360f2; } .wa { background: #25d366; }
-        
-        .partner-btn { background: var(--gold); color: white; border: none; padding: 15px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 8px; }
+        .partner-btn { background: var(--gold); color: white; border: none; padding: 15px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
     </style>
 </head>
 <body>
@@ -54,9 +56,9 @@
 
 <div class="fixed-footer">
     <div id="m-menu" class="contact-menu">
-        <a href="https://t.me/+380678622724" target="_blank" rel="noopener noreferrer" class="contact-link tg">Telegram</a>
+        <a href="https://t.me/+380678622724" target="_blank" class="contact-link tg">Telegram</a>
         <a href="viber://chat?number=%2B380678622724" class="contact-link vb">Viber</a>
-        <a href="https://wa.me/380678622724" target="_blank" rel="noopener noreferrer" class="contact-link wa">WhatsApp</a>
+        <a href="https://wa.me/380678622724" target="_blank" class="contact-link wa">WhatsApp</a>
     </div>
     <button onclick="toggleMenu()" class="partner-btn">🤝 <span>Партнерство</span></button>
 </div>
@@ -65,6 +67,13 @@
     const scriptUrl = "https://script.google.com/macros/s/AKfycbwMZaoa6NCvzoBpM3qx55qL_9eCjZ0XdrC4CRYsZs-Yxq_hyTFh0A_BsV38JUJdCgo-eA/exec";
     let allData = [];
     let currentCategory = 'all';
+
+    // ФУНКЦІЯ ДЛЯ ПРИМУСОВОГО ВІДКРИТТЯ НОВОЇ ВКЛАДКИ
+    function openLink(url) {
+        if (!url) return;
+        const newWindow = window.open(url, '_blank');
+        if (newWindow) newWindow.focus();
+    }
 
     function toggleMenu() {
         const m = document.getElementById('m-menu');
@@ -121,11 +130,13 @@
             html += `
                 <div class="card ${catClass}">
                     <h3>${item["Назва"]}</h3>
-                    <a href="${item["Посилання"]}" target="_blank" rel="noopener noreferrer" class="qr-box">
-                        <img src="${qrUrl}" alt="QR">
-                    </a>
-                    <p class="desc">${item["Опис"] || ''}</p>
-                    <a href="${item["Карта"]}" target="_blank" rel="noopener noreferrer" class="loc">📍 Локація</a>
+                    <div class="card-content">
+                        <div class="qr-box" onclick="openLink('${item["Посилання"]}')">
+                            <img src="${qrUrl}" alt="QR">
+                        </div>
+                        <p class="desc">${item["Опис"] || ''}</p>
+                        <div class="loc" onclick="openLink('${item["Карта"]}')">📍 Локація</div>
+                    </div>
                 </div>`;
         });
         container.innerHTML = html;
